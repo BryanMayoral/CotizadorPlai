@@ -9,8 +9,16 @@ import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 import javax.swing.text.Document;
@@ -20,7 +28,7 @@ import javax.swing.text.Document;
  * @author brmay
  */
 public class CotizacionIT extends javax.swing.JDialog {
-    static double CA=580,ST=375,CGM=85;
+    static float CA=580,ST=375,CGM=85;
     
     /**
      * Creates new form CotizacionIT
@@ -31,6 +39,7 @@ public class CotizacionIT extends javax.swing.JDialog {
         getContentPane().setBackground(Color.white);
         setSize(600,570);
         setResizable(false);
+        setLocationRelativeTo(null);
     }
 
     /**
@@ -100,11 +109,11 @@ public class CotizacionIT extends javax.swing.JDialog {
 
     private void btnCalcularActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCalcularActionPerformed
         try{
-            double TA=Double.parseDouble(txtTA.getText());
-            double CC=Double.parseDouble(txtCC.getText());
-            double OP=Double.parseDouble(txtOP.getText());
-            
-            double Cotizacion=TA*((CC*CA)+((CC/30)*ST))+(OP*CC*CGM);
+            float TA=Float.parseFloat(txtTA.getText());
+            float CC=Float.parseFloat(txtCC.getText());
+            float OP=Float.parseFloat(txtOP.getText());
+           
+            float Cotizacion=TA*((CC*CA)+((CC/30)*ST))+(OP*CC*CGM);
             
             JOptionPane.showMessageDialog(null,"La cotizacion es: "+Cotizacion);
             
@@ -158,51 +167,103 @@ public class CotizacionIT extends javax.swing.JDialog {
     }
     
     
-    public static void generarTicketImagen(String nombreArchivo, double TA, double CC, double OP, double Cotizacion) {
-        int ancho = 280;
-        int alto = 450;
+    public static void generarTicketImagen(String nombreArchivo, float TA, float CC, float OP, float Cotizacion) {
+    try {
+        // Obtener el token antes de hacer la solicitud
+        String token = generarToken(); // Llama a la función generarToken para obtener el token
 
-        BufferedImage imagen = new BufferedImage(ancho, alto, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g2d = imagen.createGraphics();
+        if (token == null || token.isEmpty()) {
+            System.out.println("Error: No se pudo obtener el token.");
+            return;
+        }
 
-        g2d.setColor(Color.WHITE);
-        g2d.fillRect(0, 0, ancho, alto);
+        // Usa el token directamente en la cabecera Authorization
+        URL url = new URL("http://localhost:8055/items/IT");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Authorization", "Bearer " + token);  // Usamos el token obtenido
+        con.setDoOutput(true);
 
-        g2d.setColor(Color.BLACK);
-        g2d.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        String jsonInputString = String.format(
+            "{ \"Tiempo_de_almacenamiento\": %.2f, \"Cantidad_de_cursos\": %.2f, \"Costo_por_almacenamiento\": %.2f, \"Costo_soporte_tecnico\": %.2f, \"Cantidad_de_operadores\": %.2f, \"Costo_moodle\": %.2f, \"Cotizacion\": %.2f }",
+            TA, CC, CA, ST, OP, CGM, Cotizacion
+        );
 
-        int y = 20;
-        int salto = 15;
 
-        g2d.drawString("***** COTIZACIÓN *****", 50, y); y += salto;
-        g2d.drawString("----------------------------------------", 0, y); y += salto;
+        try (OutputStream os = con.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
 
-        g2d.drawString(String.format("Soporte técnico:           $%.2f", ST), 10, y); y += salto;
-        g2d.drawString(String.format("Gestión de Moodle:         $%.2f", CGM), 10, y); y += salto;
-        g2d.drawString(String.format("Almacenamiento:            $%.2f", CA), 10, y); y += salto;
-
-        g2d.drawString("----------------------------------------", 0, y); y += salto;
-        g2d.drawString(String.format("Tiempo almacenamiento:     %.0f meses", TA), 10, y); y += salto;
-        g2d.drawString(String.format("Cantidad de cursos:        %.0f", CC), 10, y); y += salto;
-        g2d.drawString(String.format("Operadores de soporte:     %.0f", OP), 10, y); y += salto;
-
-        g2d.drawString("----------------------------------------", 0, y); y += salto;
-        g2d.setFont(new Font("Monospaced", Font.BOLD, 13));
-        g2d.drawString(String.format("TOTAL COTIZACIÓN:         $%.2f", Cotizacion), 10, y); y += salto * 2;
-
-        g2d.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        g2d.drawString("Gracias por cotizar con nosotros.", 20, y); y += salto;
+        int responseCode = con.getResponseCode();
         
 
-        g2d.dispose();
-
-        try {
-            ImageIO.write(imagen, "png", new File(nombreArchivo));
-            System.out.println("Cotización generada: " + nombreArchivo);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+}
+    
+    
+    
+    public static String generarToken() {
+    try {
+        // 1. Configurar la conexión POST al endpoint de login
+        URL url = new URL("http://localhost:8055/auth/login");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+
+        // 2. JSON con tus credenciales
+        String jsonInputString = "{"
+            + "\"email\": \"brmayoralg@gmail.com\"," // Aquí pones tu correo
+            + "\"password\": \"123\"" // Aquí pones tu contraseña
+            + "}";
+
+        // 3. Enviar credenciales
+        try (OutputStream os = con.getOutputStream()) {
+            os.write(jsonInputString.getBytes(StandardCharsets.UTF_8));
+        }
+
+        // 4. Leer la respuesta
+        int responseCode = con.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    response.append(line);
+                }
+            }
+
+            // 5. Extraer el access_token con regex
+            String responseBody = response.toString();
+            Pattern pattern = Pattern.compile("\"access_token\"\\s*:\\s*\"([^\"]+)\"");
+            Matcher matcher = pattern.matcher(responseBody);
+            if (matcher.find()) {
+                String accessToken = matcher.group(1);
+                return accessToken; // Regresa el token
+            } else {
+                
+                return null;
+            }
+
+        } else {
+            
+            return null;
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return null;
+    }
+}
+    
+    
+    
+    
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCalcular;

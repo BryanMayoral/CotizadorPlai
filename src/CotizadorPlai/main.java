@@ -4,6 +4,8 @@
  */
 package CotizadorPlai;
 
+import java.net.URL;
+
 /**
  *
  * @author brmay
@@ -15,7 +17,8 @@ public class main extends javax.swing.JFrame {
      */
     public main() {
         initComponents();
-        setResizable(false);
+        setResizable(false); 
+        setLocationRelativeTo(null);
     }
 
     /**
@@ -109,6 +112,9 @@ public class main extends javax.swing.JFrame {
             }
         });
     }
+    
+    
+    
     
     
 
