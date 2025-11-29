@@ -9,9 +9,6 @@ import java.awt.Cursor;
 import java.awt.Font;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 
@@ -29,7 +26,7 @@ public class Main extends javax.swing.JFrame {
         setLocation(300,100);
         Design();
         Paneles();
-        setTitle("Cotizador Plai"); 
+        setTitle("Cotizador Plai");
     }
 
     /**

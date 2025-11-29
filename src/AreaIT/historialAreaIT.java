@@ -4,8 +4,14 @@
  */
 package AreaIT;
 
+import org.jdatepicker.impl.JDatePanelImpl;
+import org.jdatepicker.impl.JDatePickerImpl;
+import org.jdatepicker.impl.UtilDateModel;
+import org.jdatepicker.impl.JDatePanelImpl;
+import java.util.Properties;
 import static AreaIT.CotizacionIT.AclararCampos;
 import static AreaIT.CotizacionIT.ListaText;
+import static AreaIT.CotizacionIT.generarToken;
 import CotizadorPlai.Editar;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -19,10 +25,14 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +41,9 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 
 /**
@@ -51,6 +64,7 @@ public class historialAreaIT extends javax.swing.JFrame {
         lblFranja.setOpaque(true);
         lblFranja.setBackground(new Color(35, 45, 60));
         Design();
+        inicializarYFiltrarHistorial();
         cargarFilasDesdeDirectus();
     }
 
@@ -69,7 +83,6 @@ public class historialAreaIT extends javax.swing.JFrame {
         lblClienteHistorialAreaIT = new javax.swing.JLabel();
         txtClienteHistorialAreaIT = new javax.swing.JTextField();
         lblFechaHistorialAreaIT = new javax.swing.JLabel();
-        jfFechaHistorialAreaIT = new javax.swing.JFormattedTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         jtCotizacionesAreaIT = new javax.swing.JTable();
         btnBuscarHistorialAreaIT = new javax.swing.JButton();
@@ -91,6 +104,12 @@ public class historialAreaIT extends javax.swing.JFrame {
         lblClienteHistorialAreaIT.setText("Cliente:");
         jphistorialAreaIT.add(lblClienteHistorialAreaIT);
         lblClienteHistorialAreaIT.setBounds(10, 100, 70, 16);
+
+        txtClienteHistorialAreaIT.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtClienteHistorialAreaITActionPerformed(evt);
+            }
+        });
         jphistorialAreaIT.add(txtClienteHistorialAreaIT);
         txtClienteHistorialAreaIT.setBounds(90, 100, 85, 22);
 
@@ -98,25 +117,16 @@ public class historialAreaIT extends javax.swing.JFrame {
         jphistorialAreaIT.add(lblFechaHistorialAreaIT);
         lblFechaHistorialAreaIT.setBounds(10, 130, 80, 16);
 
-        jfFechaHistorialAreaIT.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.DateFormatter(new java.text.SimpleDateFormat("dd/MM/yyyy"))));
-        jfFechaHistorialAreaIT.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jfFechaHistorialAreaITActionPerformed(evt);
-            }
-        });
-        jphistorialAreaIT.add(jfFechaHistorialAreaIT);
-        jfFechaHistorialAreaIT.setBounds(90, 130, 85, 22);
-
         jtCotizacionesAreaIT.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
             new String [] {
-                "Nombre", "Costo almc", "Costo soporte tec", "Tiempo almacenamiento", "Cantidad operadores", "Costo Moodle", "Cotizacion"
+                "Nombre", "Costo almc", "Costo soporte tec", "Tiempo almacenamiento", "Cantidad operadores", "Costo Moodle", "Cotizacion", "Fecha"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false
+                false, false, false, false, false, false, false, true
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -162,7 +172,8 @@ public class historialAreaIT extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnBuscarHistorialAreaITActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBuscarHistorialAreaITActionPerformed
-        btnBuscarHistorialAreaIT.setCursor(new Cursor(Cursor.HAND_CURSOR)); 
+        btnBuscarHistorialAreaIT.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
        cargarFilasDesdeDirectus();
     }//GEN-LAST:event_btnBuscarHistorialAreaITActionPerformed
 
@@ -173,17 +184,17 @@ public class historialAreaIT extends javax.swing.JFrame {
     }//GEN-LAST:event_btnVolverHistorialAreaItActionPerformed
 
     private void btnLimpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLimpiarActionPerformed
-        // TODO add your handling code here:
+        
         btnLimpiar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         txtClienteHistorialAreaIT.setText("");
-        jfFechaHistorialAreaIT.setText("");
+        datePicker.getModel().setValue(null);
         AclararCampos();
         cargarFilasDesdeDirectus();
     }//GEN-LAST:event_btnLimpiarActionPerformed
 
-    private void jfFechaHistorialAreaITActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jfFechaHistorialAreaITActionPerformed
+    private void txtClienteHistorialAreaITActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtClienteHistorialAreaITActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jfFechaHistorialAreaITActionPerformed
+    }//GEN-LAST:event_txtClienteHistorialAreaITActionPerformed
 
     /**
      * @param args the command line arguments
@@ -198,74 +209,61 @@ public class historialAreaIT extends javax.swing.JFrame {
         lblFechaHistorialAreaIT.setFont(new Font("Arial", Font.BOLD, 15));
     }
     
-    public static void cargarFilasDesdeDirectus() {
+    public void cargarFilasDesdeDirectus() {
         try {
-            String urlStr = "http://localhost:8055/items/IT";
-            // 1. Hacer la petición HTTP
-            String Token = generarToken();
+            String urlStr = "http://localhost:8055/items/Cotizador_IT";
+            String token = generarToken();
             HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
             conn.setRequestMethod("GET");
-            conn.setRequestProperty("Authorization", "Bearer " + Token);
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             StringBuilder sb = new StringBuilder();
             String linea;
             while ((linea = reader.readLine()) != null) sb.append(linea);
             reader.close();
 
-            // 2. Extraer el array "data"
-            String json = sb.toString();
-            int start = json.indexOf("[");
-            int end = json.lastIndexOf("]") + 1;
-            if (start == -1 || end == -1) {
-                throw new IllegalStateException("No se encontró el array 'data'.");
+            // Parsear usando JSON.simple
+            JSONParser parser = new JSONParser();
+            JSONObject jsonResponse = (JSONObject) parser.parse(sb.toString());
+
+            if (!jsonResponse.containsKey("data")) {
+                throw new IllegalStateException("No se encontró el array 'data' en la respuesta.");
             }
-            String dataArray = json.substring(start, end);
 
-            // 3. Separar objetos JSON simples
-            List<String> objetos = Arrays.asList(dataArray.split("\\},\\{"));
+            JSONArray dataArray = (JSONArray) jsonResponse.get("data");
 
-            // 4. Obtener modelo y columnas existentes
             DefaultTableModel model = (DefaultTableModel) jtCotizacionesAreaIT.getModel();
-            int numCols = model.getColumnCount();
-
-            // 5. Limpiar filas existentes
             model.setRowCount(0);
 
-            // Obtener filtros
             String clienteFiltro = txtClienteHistorialAreaIT.getText().trim().toLowerCase();
-            String fechaFiltroStr = jfFechaHistorialAreaIT.getText().trim();
 
-            for (String objStr : objetos) {
-                objStr = objStr.replaceAll("^\\{", "").replaceAll("\\}$", "");
-                String[] pares = objStr.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+            Date selectedDate = (Date) datePicker.getModel().getValue();
+            String fechaFiltroStr = "";
+            if (selectedDate != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                fechaFiltroStr = sdf.format(selectedDate);
+            }
 
-                Map<String, String> fila = new HashMap<>();
-                for (String par : pares) {
-                    String[] kv = par.split(":", 2);
-                    if (kv.length < 2) continue;
-                    String clave = kv[0].trim().replaceAll("^\"|\"$", "");
-                    String valor = kv[1].trim().replaceAll("^\"|\"$", "");
-                    fila.put(clave, valor);
-                }
+            NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
+            numberFormat.setMinimumFractionDigits(2);
+            numberFormat.setMaximumFractionDigits(2);
 
-                String nombre = fila.getOrDefault("Nombre", "").toLowerCase();
-                String fecha = fila.getOrDefault("Fecha", ""); // Cambia "Fecha" por la clave correcta de tu JSON si es otro campo
+            for (Object item : dataArray) {
+                JSONObject fila = (JSONObject) item;
+
+                String nombre = String.valueOf(fila.getOrDefault("Nombre", "")).toLowerCase();
+                String fecha = String.valueOf(fila.getOrDefault("Fecha", ""));
 
                 boolean coincideCliente = clienteFiltro.isEmpty() || nombre.contains(clienteFiltro);
                 boolean coincideFecha = true;
 
                 if (!fechaFiltroStr.isEmpty() && fecha != null && !fecha.isEmpty()) {
                     try {
-                        // Extraer solo fecha sin hora (asumiendo formato ISO "yyyy-MM-ddTHH:mm:ssZ" o similar)
                         String fechaISO = fecha.split("T")[0];
-
-                        // Formatos para comparar solo día/mes/año
-                        java.text.SimpleDateFormat formatoServidor = new java.text.SimpleDateFormat("yyyy-MM-dd");
-                        java.text.SimpleDateFormat formatoUsuario = new java.text.SimpleDateFormat("dd/MM/yyyy");
-
-                        // Normaliza ambas fechas al mismo formato
+                        SimpleDateFormat formatoServidor = new SimpleDateFormat("yyyy-MM-dd");
+                        SimpleDateFormat formatoUsuario = new SimpleDateFormat("dd/MM/yyyy");
                         String fechaServidorFormateada = formatoUsuario.format(formatoServidor.parse(fechaISO));
-
                         coincideFecha = fechaServidorFormateada.equals(fechaFiltroStr);
                     } catch (Exception e) {
                         coincideFecha = false;
@@ -275,12 +273,13 @@ public class historialAreaIT extends javax.swing.JFrame {
                 if (coincideCliente && coincideFecha) {
                     Object[] datos = new Object[]{
                         fila.getOrDefault("Nombre", ""),
-                        fila.getOrDefault("Costo_por_almacenamiento", ""),
-                        fila.getOrDefault("Costo_soporte_tecnico", ""),
+                        formatIfNumber(fila.get("Costo_por_almacenamiento"), numberFormat),
+                        formatIfNumber(fila.get("Costo_soporte_tecnico"), numberFormat),
                         fila.getOrDefault("Tiempo_de_almacenamiento", ""),
                         fila.getOrDefault("Cantidad_de_operadores", ""),
-                        fila.getOrDefault("Costo_moodle", ""),
-                        fila.getOrDefault("Cotizacion", "")
+                        formatIfNumber(fila.get("Costo_moodle"), numberFormat),
+                        formatIfNumber(fila.get("Cotizacion"), numberFormat),
+                        fila.getOrDefault("Fecha", "")
                     };
                     model.addRow(datos);
                 }
@@ -292,74 +291,46 @@ public class historialAreaIT extends javax.swing.JFrame {
         }
     }
     
-    public static void AclararCampos(){
-        for(JTextField obj:ListaText){
-            obj.setBackground(Color.white);
-        }
-    }
-    
-    public static String generarToken() {
+    private Object formatIfNumber(Object valor, NumberFormat nf) {
+        if (valor == null) return "";
         try {
-
-            URL url = new URL("http://localhost:8055/auth/login");
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setDoOutput(true);
-
-            String jsonInputString = "{"
-                    + "\"email\": \"brmayoralg@gmail.com\","
-                    + "\"password\": \"123\""
-                    + "}";
-
-            try (OutputStream os = con.getOutputStream()) {
-                os.write(jsonInputString.getBytes(StandardCharsets.UTF_8));
-            }
-
-            
-            int responseCode = con.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                StringBuilder response = new StringBuilder();
-                try (BufferedReader in = new BufferedReader(
-                        new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        response.append(line);
-                    }
-                }
-
-                // 5. Extraer el access_token con regex
-                String responseBody = response.toString();
-                Pattern pattern = Pattern.compile("\"access_token\"\\s*:\\s*\"([^\"]+)\"");
-                Matcher matcher = pattern.matcher(responseBody);
-                if (matcher.find()) {
-                    String accessToken = matcher.group(1);
-                    return accessToken; // Regresa el token
-                } else {
-
-                    return null;
-                }
-
+            if (valor instanceof Number) {
+                return nf.format(((Number) valor).doubleValue());
             } else {
-
-                return null;
+                return nf.format(Double.parseDouble(valor.toString()));
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        } catch (NumberFormatException e) {
+            return valor.toString();
         }
+    }
+
+
+    
+    public void inicializarYFiltrarHistorial() {
+        // 1. Crear y agregar el JDatePicker al panel
+        UtilDateModel model = new UtilDateModel();
+        Properties p = new Properties();
+        p.put("text.today", "Hoy");
+        p.put("text.month", "Mes");
+        p.put("text.year", "Año");
+        JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
+        datePicker = new JDatePickerImpl(datePanel, new org.jdatepicker.impl.DateComponentFormatter());
+        datePicker.setBounds(90, 130, 150, 25);
+        jphistorialAreaIT.add(datePicker);
+        jphistorialAreaIT.repaint();
     }
     
     
-    
+   
+    private JDatePickerImpl datePicker;
     private javax.swing.JPanel jphistorial;
+    public static Date selectedDate;
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBuscarHistorialAreaIT;
     private javax.swing.JButton btnLimpiar;
     private javax.swing.JButton btnVolverHistorialAreaIt;
     private javax.swing.JScrollPane jScrollPane1;
-    private static javax.swing.JFormattedTextField jfFechaHistorialAreaIT;
     private javax.swing.JPanel jphistorialAreaIT;
     private static javax.swing.JTable jtCotizacionesAreaIT;
     private javax.swing.JLabel lblClienteHistorialAreaIT;

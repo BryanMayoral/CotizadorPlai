@@ -21,6 +21,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import AreaIT.historialAreaIT;
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import org.json.simple.JSONObject;
 /**
  *
  * @author brmay
@@ -165,9 +168,16 @@ public class CotizacionIT extends javax.swing.JFrame {
 
             float Cotizacion = Tiempo_de_almacenamiento * ((Cantidad_de_cursos * Costo_por_almacenamiento) + ((Cantidad_de_cursos / 30.0f) * Costo_de_soporte)) + (Cantidad_de_operadores * Cantidad_de_cursos * Costo_por_gestion);
 
-            subirInfo(Tiempo_de_almacenamiento, Cantidad_de_cursos, Cantidad_de_operadores, Cotizacion, Cliente);
-            AclararCampos();
-            JOptionPane.showMessageDialog(this, "La cotización es: " + Cotizacion);
+            if(txtCliente.getText().trim().isEmpty()){
+                txtCliente.setBackground(Color.red);
+                JOptionPane.showMessageDialog(null,"El nombre del cliente no puede estar vacío","Nombre invalido", JOptionPane.ERROR_MESSAGE);
+            }else{
+                subirInfo(Tiempo_de_almacenamiento, Cantidad_de_cursos, Cantidad_de_operadores, Cotizacion, Cliente);
+                AclararCampos();
+                NumberFormat formato=NumberFormat.getInstance();
+                String numeroFormateado=formato.format(Cotizacion);
+                JOptionPane.showMessageDialog(null,"Nombre del cliente: "+txtCliente.getText()+"\nCantidad de cursos: "+Cantidad_de_cursos+"\nCosto por almacenamiento: $"+Costo_por_almacenamiento+"\nTiempo de almacenamiento: "+Tiempo_de_almacenamiento+"\nCantidad de operadores: "+Cantidad_de_operadores+"\nCosto Moodle: $"+Costo_por_gestion+"\nLa cotización es: $" +numeroFormateado,"Cotizacion",JOptionPane.INFORMATION_MESSAGE);
+            }         
         } catch(NumberFormatException e) {
             if(validarCampoVacio()){
                 JOptionPane.showMessageDialog(null,"Tiene que rellenar los campos en rojo.","Campos vacios",JOptionPane.ERROR_MESSAGE);
@@ -183,6 +193,7 @@ public class CotizacionIT extends javax.swing.JFrame {
         txtCC.setText("");
         txtOP.setText("");
         txtTA.setText("");
+        txtCliente.setText("");
         AclararCampos();
     }//GEN-LAST:event_btnLimpiarActionPerformed
 
@@ -195,90 +206,98 @@ public class CotizacionIT extends javax.swing.JFrame {
      * @param args the command line arguments
      */
 
-    public static void subirInfo(int Tiempo_de_almacenamiento, int Cantidad_de_cursos, int Cantidad_de_operadores, float Cotizacion,String Cliente) {
-        try {
-            String token = generarToken();
-            URL url = new URL("http://localhost:8055/items/IT");
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("Authorization", "Bearer " + token);
-            con.setDoOutput(true);
+    public static void subirInfo(int Tiempo_de_almacenamiento, int Cantidad_de_cursos, int Cantidad_de_operadores, float Cotizacion, String Cliente) {
+    try {
+        String token = generarToken();
+        URL url = new URL("http://localhost:8055/items/Cotizador_IT");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Authorization", "Bearer " + token);
+        con.setDoOutput(true);
+        
 
-            String jsonInputString = String.format(
-                "{\"Nombre\": \"%s\", \"Tiempo_de_almacenamiento\": %d, \"Cantidad_de_cursos\": %d, \"Costo_por_almacenamiento\": %.2f, \"Costo_soporte_tecnico\": %.2f, \"Cantidad_de_operadores\": %d, \"Costo_moodle\": %.2f, \"Cotizacion\": %.2f }",
-                Cliente, Tiempo_de_almacenamiento, Cantidad_de_cursos, Costo_por_almacenamiento, Costo_de_soporte, Cantidad_de_operadores, Costo_por_gestion, Cotizacion
-            );
-
-            try (OutputStream os = con.getOutputStream()) {
-                byte[] input = jsonInputString.getBytes("utf-8");
-                os.write(input, 0, input.length);
-            }
-
-            int responseCode = con.getResponseCode();
-            historialAreaIT.cargarFilasDesdeDirectus();
-        } catch (Exception e) {
-            
+        // Crear JSON usando JSONObject
+        JSONObject json = new JSONObject();
+        json.put("Nombre", Cliente);
+        json.put("Tiempo_de_almacenamiento", Tiempo_de_almacenamiento);
+        json.put("Cantidad_de_cursos", Cantidad_de_cursos);
+        json.put("Costo_por_almacenamiento", Costo_por_almacenamiento);
+        json.put("Costo_soporte_tecnico", Costo_de_soporte);
+        json.put("Cantidad_de_operadores", Cantidad_de_operadores);
+        json.put("Costo_moodle", Costo_por_gestion);
+        json.put("Cotizacion", Cotizacion);
+        json.put("Fecha",LocalDate.now().toString());
+        
+        try (OutputStream os = con.getOutputStream()) {
+            byte[] input = json.toString().getBytes("utf-8");
+            os.write(input, 0, input.length);
         }
+
+        int responseCode = con.getResponseCode();
+        // historialAreaIT.cargarFilasDesdeDirectus();
+
+    } catch (Exception e) {
+        e.printStackTrace();       
     }
+}
 
     public static String generarToken() {
-        try {
+    try {
+        URL url = new URL("http://localhost:8055/auth/login");
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
 
-            URL url = new URL("http://localhost:8055/auth/login");
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setDoOutput(true);
+        // Usamos JSONObject para crear el cuerpo del request
+        JSONObject json = new JSONObject();
+        json.put("email", "brmayoralg@gmail.com");
+        json.put("password", "123");
 
-            String jsonInputString = "{"
-                    + "\"email\": \"brmayoralg@gmail.com\","
-                    + "\"password\": \"123\""
-                    + "}";
+        try (OutputStream os = con.getOutputStream()) {
+            byte[] input = json.toString().getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
 
-            try (OutputStream os = con.getOutputStream()) {
-                os.write(jsonInputString.getBytes(StandardCharsets.UTF_8));
+        int responseCode = con.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader in = new BufferedReader(
+                    new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    response.append(line);
+                }
             }
 
-            
-            int responseCode = con.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                StringBuilder response = new StringBuilder();
-                try (BufferedReader in = new BufferedReader(
-                        new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8))) {
-                    String line;
-                    while ((line = in.readLine()) != null) {
-                        response.append(line);
-                    }
-                }
-
-                // 5. Extraer el access_token con regex
-                String responseBody = response.toString();
-                Pattern pattern = Pattern.compile("\"access_token\"\\s*:\\s*\"([^\"]+)\"");
-                Matcher matcher = pattern.matcher(responseBody);
-                if (matcher.find()) {
-                    String accessToken = matcher.group(1);
-                    return accessToken; // Regresa el token
-                } else {
-
-                    return null;
-                }
-
+            // Extraer el access_token con regex
+            String responseBody = response.toString();
+            Pattern pattern = Pattern.compile("\"access_token\"\\s*:\\s*\"([^\"]+)\"");
+            Matcher matcher = pattern.matcher(responseBody);
+            if (matcher.find()) {
+                return matcher.group(1); // Retornar token
             } else {
-
+                System.err.println("No se encontró access_token.");
                 return null;
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } else {
+            System.err.println("Error al autenticar. Código: " + responseCode);
             return null;
         }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        return null;
     }
+}
     
     public static void AclararCampos(){
         for(JTextField obj:ListaText){
             obj.setBackground(Color.white);
         }
+        txtCliente.setBackground(Color.white);
     }
     
     
@@ -324,6 +343,7 @@ public class CotizacionIT extends javax.swing.JFrame {
         return x;
     }
     
+    
     public void Design(){
         getContentPane().setBackground(new Color(214,217,223)); 
         lblFranja.setOpaque(true);
@@ -338,6 +358,8 @@ public class CotizacionIT extends javax.swing.JFrame {
     public JPanel getJpCotizacionIT() {
         return jpCotizacionIT;
     }
+    
+   
 
     
     private javax.swing.JPanel jpNuevaCotizacion;
@@ -353,7 +375,7 @@ public class CotizacionIT extends javax.swing.JFrame {
     private javax.swing.JLabel lblTiempoAl;
     private javax.swing.JLabel lblTitle;
     private javax.swing.JTextField txtCC;
-    private javax.swing.JTextField txtCliente;
+    private static javax.swing.JTextField txtCliente;
     private javax.swing.JTextField txtOP;
     private javax.swing.JTextField txtTA;
     // End of variables declaration//GEN-END:variables
