@@ -4,18 +4,29 @@
  */
 package CotizadorPlai;
 
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Font;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JPanel;
+
+
 /**
  *
  * @author brmay
  */
-public class main extends javax.swing.JFrame {
-
+public class Main extends javax.swing.JFrame {
     /**
      * Creates new form main
      */
-    public main() {
+    public Main() {
         initComponents();
         setResizable(false);
+        setLocation(300,100);
+        Design();
+        Paneles();
+        setTitle("Cotizador Plai");
     }
 
     /**
@@ -27,54 +38,78 @@ public class main extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jLabel1 = new javax.swing.JLabel();
+        jpMain = new javax.swing.JPanel();
+        btnCotizaciones = new javax.swing.JButton();
+        btnEditar = new javax.swing.JButton();
+        lblTitle = new javax.swing.JLabel();
+        btnNuevaCotizacion = new javax.swing.JButton();
+        lblFranja = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
-        mbCotizar = new javax.swing.JMenu();
-        btnAreaIT = new javax.swing.JMenuItem();
-        jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        getContentPane().setLayout(null);
 
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/CotizadorPlai/fondo.jpeg"))); // NOI18N
+        jpMain.setLayout(null);
+
+        btnCotizaciones.setText("Cotizaciones");
+        btnCotizaciones.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCotizacionesActionPerformed(evt);
+            }
+        });
+        jpMain.add(btnCotizaciones);
+        btnCotizaciones.setBounds(25, 191, 216, 84);
+
+        btnEditar.setText("Editar");
+        btnEditar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnEditarActionPerformed(evt);
+            }
+        });
+        jpMain.add(btnEditar);
+        btnEditar.setBounds(537, 191, 216, 84);
+
+        lblTitle.setFont(new java.awt.Font("Segoe UI", 0, 24)); // NOI18N
+        lblTitle.setText("COTIZADOR PLAI");
+        jpMain.add(lblTitle);
+        lblTitle.setBounds(25, 93, 286, 40);
+
+        btnNuevaCotizacion.setText("Nueva Cotizacion");
+        btnNuevaCotizacion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNuevaCotizacionActionPerformed(evt);
+            }
+        });
+        jpMain.add(btnNuevaCotizacion);
+        btnNuevaCotizacion.setBounds(292, 191, 216, 84);
+
+        getContentPane().add(jpMain);
+        jpMain.setBounds(0, 50, 820, 380);
+        getContentPane().add(lblFranja);
+        lblFranja.setBounds(0, 0, 794, 59);
 
         jMenuBar1.setBackground(new java.awt.Color(255, 153, 51));
         jMenuBar1.setForeground(new java.awt.Color(255, 153, 0));
-
-        mbCotizar.setText("Cotizar");
-
-        btnAreaIT.setText("Area I+T");
-        btnAreaIT.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAreaITActionPerformed(evt);
-            }
-        });
-        mbCotizar.add(btnAreaIT);
-
-        jMenuBar1.add(mbCotizar);
-
-        jMenu2.setText("Editar");
-        jMenuBar1.add(jMenu2);
-
         setJMenuBar(jMenuBar1);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel1)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnAreaITActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAreaITActionPerformed
-        new CotizacionIT(this, rootPaneCheckingEnabled).setVisible(true);
-    }//GEN-LAST:event_btnAreaITActionPerformed
+    private void btnCotizacionesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCotizacionesActionPerformed
+        jpMain.setVisible(false);
+        jpHistorial.setVisible(true);
+    }//GEN-LAST:event_btnCotizacionesActionPerformed
 
+    private void btnNuevaCotizacionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNuevaCotizacionActionPerformed
+        jpMain.setVisible(false);
+        jpNuevaCotizacion.setVisible(true);
+    }//GEN-LAST:event_btnNuevaCotizacionActionPerformed
+
+    private void btnEditarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEditarActionPerformed
+        jpMain.setVisible(false);
+        jpEditar.setVisible(true);
+    }//GEN-LAST:event_btnEditarActionPerformed
+    
     /**
      * @param args the command line arguments
      */
@@ -92,31 +127,70 @@ public class main extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(Main.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
         //</editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new main().setVisible(true);
+                new Main().setVisible(true);
             }
         });
     }
     
+    public void Design(){
+        this.setSize(804,541);
+        lblFranja.setOpaque(true);
+        lblFranja.setBackground(new Color(35, 45, 60));
+        lblTitle.setFont(new Font("Arial", Font.BOLD, 30));
+        btnCotizaciones.setFont(new Font("Arial", Font.BOLD, 16));
+        btnNuevaCotizacion.setFont(new Font("Arial", Font.BOLD, 16));
+        btnEditar.setFont(new Font("Arial", Font.BOLD, 16));
+        btnCotizaciones.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        btnCotizaciones.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnNuevaCotizacion.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        btnNuevaCotizacion.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnEditar.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));  
+        this.setIconImage(new ImageIcon(getClass().getResource("/CotizadorPlai/logo.png")).getImage());
+    }
     
+    public void Paneles(){
+        jpHistorial = new HistorialCotizacion(this).getJpHistorialCotizacion();
+        jpHistorial.setVisible(false);
+        getContentPane().add(jpHistorial);
+        jpNuevaCotizacion=new NuevaCotizacion(this).getJpNuevaCotizacion();
+        jpNuevaCotizacion.setVisible(false);
+        getContentPane().add(jpNuevaCotizacion);
+        jpEditar=new Editar(this).getJpEditar();
+        jpEditar.setVisible(false);
+        getContentPane().add(jpEditar);
+    }
 
+    public JPanel getJpMain() {
+        return jpMain;
+    }
+    
+    
+    
+    private javax.swing.JPanel jpHistorial;
+    private javax.swing.JPanel jpNuevaCotizacion;
+    private javax.swing.JPanel jpEditar;
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JMenuItem btnAreaIT;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JMenu jMenu2;
+    private static javax.swing.JButton btnCotizaciones;
+    private static javax.swing.JButton btnEditar;
+    private static javax.swing.JButton btnNuevaCotizacion;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenu mbCotizar;
+    private javax.swing.JPanel jpMain;
+    private static javax.swing.JLabel lblFranja;
+    private static javax.swing.JLabel lblTitle;
     // End of variables declaration//GEN-END:variables
 }

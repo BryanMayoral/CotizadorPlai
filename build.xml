@@ -70,4 +70,20 @@
     nbproject/build-impl.xml file. 
 
     -->
+    
+    <target name="-post-jar">
+        <jar destfile="${dist.dir}/PLAI-completo.jar">
+            <!-- Incluir las clases de json-simple.jar y jdatepicker.jar -->
+            <zipgroupfileset dir="${dist.dir}/lib" includes="*.jar"/>
+            
+            <!-- Incluir tu JAR original (PLAI.jar) -->
+            <zipfileset src="${dist.jar}" excludes="META-INF/*.SF,META-INF/*.DSA,META-INF/*.RSA"/>
+            
+            <!-- Configurar la clase principal -->
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+            </manifest>
+        </jar>
+        <echo message="JAR completo creado: ${dist.dir}/PLAI-completo.jar"/>
+    </target>
 </project>
